@@ -24,11 +24,11 @@ The new GUI will automate the entire workflow: users can paste URLs directly, se
 ```
 LinkFormatter/
 ├── Models/              (Data models: DownloadItem, AppSettings, Enums)
-├── Services/            (Business logic: DownloadService, SettingsService, UrlValidator, FileService)
+├── Services/            (Business logic: DownloadService, SettingsService, UrlValidator, FileService, FFmpegService)
 ├── ViewModels/          (Presentation logic: MainWindowViewModel, WelcomeViewModel, etc.)
 ├── Views/               (UI: MainWindow.axaml, WelcomeView.axaml, etc.)
 ├── Styles/              (DarkTheme.axaml with Claude orange)
-└── Music/               (yt-dlp.exe, ffmpeg.exe - bundled)
+└── Music/               (yt-dlp.exe bundled; ffmpeg.exe auto-downloaded on first run)
 ```
 
 ### Core Components
@@ -78,7 +78,19 @@ LinkFormatter/
   - Skips URLs containing `/you/` (user profile pages)
   - Regex: `^https?://soundcloud\.com/[\w-]+/[\w-]+` or `^https?://soundcloud\.com/[\w-]+/sets/[\w-]+`
 
-#### 4. **Download Queue System**
+#### 4. **FFmpeg Service** (Auto-download on first run)
+- **Why:** FFmpeg.exe is ~147MB and exceeds GitHub's 100MB file size limit
+- **Solution:** Download automatically on first run from trusted source
+- **FFmpeg Service:** `FFmpegService.cs` handles:
+  - Check if ffmpeg.exe exists in Music folder
+  - If missing, download from https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip (~80MB)
+  - Extract ffmpeg.exe from the archive to Music folder
+  - Report download progress via `IProgress<DownloadProgress>`
+  - Handle errors gracefully with retry options
+- **First-Run Integration:** Welcome screen checks for FFmpeg and downloads if needed
+- **Fallback:** If download fails, show error with manual download link
+
+#### 5. **Download Queue System**
 - **Model:** `DownloadItem.cs`
   ```csharp
   public class DownloadItem {
@@ -94,7 +106,7 @@ LinkFormatter/
 - **ViewModel:** `DownloadQueueViewModel.cs` manages `ObservableCollection<DownloadItemViewModel>`
 - **Operations:** Add, Remove, Reorder, Clear Completed
 
-#### 5. **UI Layout** (1200x800 main window)
+#### 6. **UI Layout** (1200x800 main window)
 
 **Structure:**
 ```
@@ -120,9 +132,11 @@ LinkFormatter/
 
 **First-Run Welcome Dialog:**
 - Modal dialog on `IsFirstRun == true`
+- **FFmpeg check and download:** Automatically check for FFmpeg and download if missing (with progress bar)
 - Auth token input (optional)
 - Link to README instructions
 - Checkbox: "I only want MP3 downloads (no token needed)"
+- Show download progress for FFmpeg if needed (~80MB, may take 1-2 minutes)
 
 **Theme Colors:**
 - Background: `#1E1E1E`
@@ -177,7 +191,15 @@ LinkFormatter/
    - Validate SoundCloud URLs via regex
    - Implement skip logic (3 slashes, /you/)
 
-8. **Services/IDownloadService.cs** & **Services/DownloadService.cs** ⭐ CRITICAL
+8. **Services/IFFmpegService.cs** & **Services/FFmpegService.cs** ⭐ CRITICAL
+   - Check if ffmpeg.exe exists in Music folder
+   - Download FFmpeg from https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip (~80MB)
+   - Extract ffmpeg.exe from ZIP archive
+   - Report download progress via `IProgress<DownloadProgress>`
+   - Handle download errors with fallback options
+   - Called during first-run welcome screen
+
+9. **Services/IDownloadService.cs** & **Services/DownloadService.cs** ⭐ CRITICAL
    - Execute yt-dlp.exe as Process
    - Build command arguments based on format (MP3 vs WAV)
    - Parse stdout for progress: `\[download\]\s+(\d+\.?\d*)%`
@@ -185,36 +207,36 @@ LinkFormatter/
    - Handle cancellation via `Process.Kill(entireProcessTree: true)`
    - Track active processes in `Dictionary<Guid, Process>`
 
-9. **Services/IFileService.cs** & **Services/FileService.cs**
-   - Get downloaded files from output folder
-   - Open file location: `Process.Start("explorer.exe", $"/select,\"{path}\"")`
+10. **Services/IFileService.cs** & **Services/FileService.cs**
+    - Get downloaded files from output folder
+    - Open file location: `Process.Start("explorer.exe", $"/select,\"{path}\"")`
 
 ### Phase 2: ViewModels
 
-10. **ViewModels/ViewModelBase.cs** - INotifyPropertyChanged base class
-11. **ViewModels/WelcomeViewModel.cs** - First-run setup, auth token input
-12. **ViewModels/SettingsPanelViewModel.cs** - Output folder, auth token, format selection
-13. **ViewModels/UrlInputViewModel.cs** - URL paste, validation, add to queue
-14. **ViewModels/DownloadItemViewModel.cs** - Wrapper for DownloadItem with UI properties
-15. **ViewModels/DownloadQueueViewModel.cs** - ObservableCollection of items, queue management
-16. **ViewModels/ProgressConsoleViewModel.cs** - Scrolling console output (max 500 lines)
-17. **ViewModels/FilesListViewModel.cs** - Downloaded files browser
-18. **ViewModels/MainWindowViewModel.cs** ⭐ CRITICAL - Orchestrates all child ViewModels, processes download queue
+11. **ViewModels/ViewModelBase.cs** - INotifyPropertyChanged base class
+12. **ViewModels/WelcomeViewModel.cs** - First-run setup, FFmpeg check/download, auth token input
+13. **ViewModels/SettingsPanelViewModel.cs** - Output folder, auth token, format selection
+14. **ViewModels/UrlInputViewModel.cs** - URL paste, validation, add to queue
+15. **ViewModels/DownloadItemViewModel.cs** - Wrapper for DownloadItem with UI properties
+16. **ViewModels/DownloadQueueViewModel.cs** - ObservableCollection of items, queue management
+17. **ViewModels/ProgressConsoleViewModel.cs** - Scrolling console output (max 500 lines)
+18. **ViewModels/FilesListViewModel.cs** - Downloaded files browser
+19. **ViewModels/MainWindowViewModel.cs** ⭐ CRITICAL - Orchestrates all child ViewModels, processes download queue
 
 ### Phase 3: Views
 
-19. **App.axaml** & **App.axaml.cs** - Avalonia application root, DI setup
-20. **Styles/DarkTheme.axaml** - Dark theme with Claude orange (#D97757)
+20. **App.axaml** & **App.axaml.cs** - Avalonia application root, DI setup
+21. **Styles/DarkTheme.axaml** - Dark theme with Claude orange (#D97757)
 
-21. **Views/WelcomeView.axaml** - First-run welcome dialog
-22. **Views/SettingsPanelView.axaml** - Left sidebar settings panel
-23. **Views/UrlInputView.axaml** - URL input section
-24. **Views/DownloadQueueView.axaml** - Queue list with controls
-25. **Views/ProgressConsoleView.axaml** - Console output viewer
-26. **Views/FilesListView.axaml** - Downloaded files list
-27. **Views/MainWindow.axaml** ⭐ CRITICAL - Main window layout composing all views
+22. **Views/WelcomeView.axaml** - First-run welcome dialog with FFmpeg download progress
+23. **Views/SettingsPanelView.axaml** - Left sidebar settings panel
+24. **Views/UrlInputView.axaml** - URL input section
+25. **Views/DownloadQueueView.axaml** - Queue list with controls
+26. **Views/ProgressConsoleView.axaml** - Console output viewer
+27. **Views/FilesListView.axaml** - Downloaded files list
+28. **Views/MainWindow.axaml** ⭐ CRITICAL - Main window layout composing all views
 
-28. **Program.cs** - Replace Main() with Avalonia bootstrapper:
+29. **Program.cs** - Replace Main() with Avalonia bootstrapper:
    ```csharp
    public static void Main(string[] args) => BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
    public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>().UsePlatformDetect().WithInterFont().LogToTrace();
@@ -222,10 +244,10 @@ LinkFormatter/
 
 ### Phase 4: Integration & Polish
 
-29. **App.axaml.cs** - Wire up dependency injection or manual service instantiation
-30. Command bindings in ViewModels (ICommand implementations)
-31. Error handling, validation messages, loading states
-32. Keyboard shortcuts (Ctrl+V to paste, Enter to add URL, Delete to remove from queue)
+30. **App.axaml.cs** - Wire up dependency injection or manual service instantiation
+31. Command bindings in ViewModels (ICommand implementations)
+32. Error handling, validation messages, loading states
+33. Keyboard shortcuts (Ctrl+V to paste, Enter to add URL, Delete to remove from queue)
 
 ## Reusable Existing Code
 
@@ -238,23 +260,36 @@ LinkFormatter/
 
 1. **Install Avalonia** - Add NuGet packages, update .csproj
 2. **Create Models** - DownloadItem, enums, AppSettings
-3. **Build Services** - SettingsService → UrlValidator → FileService → DownloadService ⭐
+3. **Build Services** - SettingsService → UrlValidator → FFmpegService ⭐ → FileService → DownloadService ⭐
 4. **Build ViewModels** - ViewModelBase → Child VMs → MainWindowViewModel ⭐
 5. **Create Theme** - DarkTheme.axaml with orange accents
-6. **Build Views** - Individual views → MainWindow ⭐
+6. **Build Views** - Individual views → WelcomeView (with FFmpeg download) → MainWindow ⭐
 7. **Wire Up App** - App.axaml.cs DI, Program.cs bootstrapper
-8. **Test Workflow** - Add URL → Validate → Queue → Download → Progress → Completion
-9. **Polish** - Error handling, keyboard shortcuts, animations
+8. **Test FFmpeg Download** - First run → FFmpeg auto-download → Verify ffmpeg.exe exists
+9. **Test Download Workflow** - Add URL → Validate → Queue → Download → Progress → Completion
+10. **Polish** - Error handling, keyboard shortcuts, animations
 
 ## Verification & Testing
 
 ### End-to-End Test Scenarios
 
-1. **First Run:**
+1. **First Run (with FFmpeg Download):**
    - Delete `%APPDATA%\SoundCloudDownloader\appsettings.json`
+   - Delete `Music\ffmpeg.exe` if it exists
    - Launch app → Welcome screen should appear
+   - FFmpeg download should start automatically (progress bar visible)
+   - Wait for FFmpeg download to complete (~80MB, 1-2 minutes)
+   - Verify `Music\ffmpeg.exe` exists after download
    - Enter auth token (optional) → Click Continue
    - Main window should open with empty queue
+
+1a. **First Run (FFmpeg Already Exists):**
+   - Delete `%APPDATA%\SoundCloudDownloader\appsettings.json`
+   - Ensure `Music\ffmpeg.exe` exists
+   - Launch app → Welcome screen should appear
+   - FFmpeg check should complete instantly (no download)
+   - Enter auth token (optional) → Click Continue
+   - Main window should open
 
 2. **Settings Persistence:**
    - Set output folder to `C:\Music`
@@ -306,6 +341,7 @@ LinkFormatter/
 
 ✅ App launches as GUI (not console)
 ✅ First-run welcome screen appears on clean install
+✅ **FFmpeg auto-downloads on first run if missing** (~80MB, with progress bar)
 ✅ Settings persist between sessions
 ✅ URLs validate correctly (accept SoundCloud, reject others)
 ✅ Duplicate prevention works (checks DownloadedUrls)
@@ -315,7 +351,7 @@ LinkFormatter/
 ✅ Pause/cancel terminates yt-dlp process
 ✅ Downloaded files list updates after completion
 ✅ Dark theme with Claude orange accents applied
-✅ Single .exe distribution works on clean Windows machine
+✅ Single .exe distribution works on clean Windows machine (no ffmpeg.exe in repo)
 
 ## Technical Notes
 
