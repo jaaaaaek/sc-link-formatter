@@ -51,20 +51,29 @@
         </Button>
       </WrapPanel>
 
-      <ScrollViewer MaxHeight="400"
+      <ScrollViewer MaxHeight="500"
                     IsVisible="{Binding ShowErrorDetails}"
                     Background="{StaticResource BackgroundBrush}"
                     VerticalScrollBarVisibility="Auto"
                     HorizontalScrollBarVisibility="Disabled"
                     AllowAutoHide="False">
-<ItemsControl ItemsSource="{Binding ErrorDetails}">
+        <ItemsControl ItemsSource="{Binding Details}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <TextBlock Text="{Binding}"
-                         Foreground="{StaticResource ErrorBrush}"
-                         FontSize="11"
-                         TextWrapping="Wrap"
-                         Margin="4,1" />
+              <StackPanel>
+                <TextBlock Text="{Binding Message}"
+                           Foreground="{StaticResource ErrorBrush}"
+                           FontSize="11"
+                           TextWrapping="Wrap"
+                           Margin="4,1"
+                           IsVisible="{Binding IsError}" />
+                <TextBlock Text="{Binding Message}"
+                           Foreground="{StaticResource SuccessBrush}"
+                           FontSize="11"
+                           TextWrapping="Wrap"
+                           Margin="4,1"
+                           IsVisible="{Binding !IsError}" />
+              </StackPanel>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>

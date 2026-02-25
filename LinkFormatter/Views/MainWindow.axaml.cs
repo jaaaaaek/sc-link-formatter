@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 
 namespace LinkFormatter.Views
 {
@@ -7,6 +8,16 @@ namespace LinkFormatter.Views
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        protected override void OnPointerPressed(PointerPressedEventArgs e)
+        {
+            base.OnPointerPressed(e);
+
+            if (FocusManager?.GetFocusedElement() is TextBox && e.Source is not TextBox)
+            {
+                FocusManager?.ClearFocus();
+            }
         }
     }
 }

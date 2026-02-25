@@ -34,13 +34,13 @@
     <StackPanel Spacing="6">
       <TextBlock Text="SoundCloud Token" Foreground="{StaticResource TextBrush}" />
       <TextBox Text="{Binding SoundCloudToken}"
-               Watermark="Optional for WAV"
+               Watermark="Required for WAV"
                Background="{StaticResource SurfaceBrush}" />
     </StackPanel>
 
     <Grid ColumnDefinitions="*,*">
       <StackPanel Grid.Column="0" Spacing="6">
-        <TextBlock Text="Default Format" Foreground="{StaticResource TextBrush}" />
+        <TextBlock Text="File Format" Foreground="{StaticResource TextBrush}" />
         <ComboBox ItemsSource="{Binding Formats}"
                   SelectedItem="{Binding PreferredFormat}"
                   Background="{StaticResource SurfaceBrush}" />
