@@ -34,15 +34,25 @@
                VerticalAlignment="Top">
         <ListBox.Styles>
           <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Margin" Value="12" />
-            <Setter Property="Height" Value="24" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Height" Value="48" />
+            <Setter Property="Background" Value="Transparent" />
           </Style>
-          <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#44FFFFFF" />
+          <Style Selector="ListBoxItem /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
           </Style>
           <Style Selector="ListBoxItem:pointerover">
-            <Setter Property="Background" Value="#44FFFFFF" />
+            <Setter Property="Background" Value="#2A2A2A" />
+          </Style>
+          <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2A2A2A" />
+          </Style>
+          <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+          </Style>
+          <Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2A2A2A" />
           </Style>
         </ListBox.Styles>
         <ListBox.ItemsPanel>
@@ -64,22 +74,14 @@
                              CornerRadius="6"
                              IsHitTestVisible="False" />
                 <Border Padding="2,0" Background="Transparent" VerticalAlignment="Center">
-                  <StackPanel Spacing="2">
-                    <Grid ColumnDefinitions="*">
-                      <TextBlock Text="{Binding DisplayName}"
-                                 Foreground="{StaticResource TextBrush}"
-                                 TextTrimming="CharacterEllipsis"
-                                 FontSize="12"
-                                 VerticalAlignment="Center"
-                                 HorizontalAlignment="Stretch"
-                                 TextAlignment="Center"
-                                 Margin="0" />
-                    </Grid>
-                    <TextBlock Text="{Binding ErrorMessage}"
-                               Foreground="{StaticResource ErrorBrush}"
-                               FontSize="11"
-                               IsVisible="{Binding HasErrorMessage}" />
-                  </StackPanel>
+                  <TextBlock Text="{Binding DisplayName}"
+                             Foreground="{StaticResource TextBrush}"
+                             TextTrimming="CharacterEllipsis"
+                             FontSize="12"
+                             VerticalAlignment="Center"
+                             HorizontalAlignment="Stretch"
+                             TextAlignment="Center"
+                             Margin="0" />
                 </Border>
               </Grid>
             </Border>

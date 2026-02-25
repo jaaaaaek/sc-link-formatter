@@ -6,6 +6,7 @@ namespace LinkFormatter.ViewModels
     public class WelcomeViewModel : ViewModelBase
     {
         private readonly IFFmpegService _ffmpegService;
+        private string _outputFolder = string.Empty;
         private string _soundCloudToken = string.Empty;
         private bool _mp3Only;
         private string _statusMessage = string.Empty;
@@ -24,6 +25,18 @@ namespace LinkFormatter.ViewModels
         public event Action? ContinueRequested;
 
         public RelayCommand ContinueCommand { get; }
+
+        public string OutputFolder
+        {
+            get => _outputFolder;
+            set
+            {
+                if (SetProperty(ref _outputFolder, value))
+                {
+                    UpdateContinueState();
+                }
+            }
+        }
 
         public string SoundCloudToken
         {
@@ -85,16 +98,21 @@ namespace LinkFormatter.ViewModels
             private set => SetProperty(ref _errorMessage, value);
         }
 
-        public bool CanContinue => !IsBusy && !HasError;
+        public bool CanContinue =>
+            !IsBusy &&
+            !HasError &&
+            !string.IsNullOrWhiteSpace(OutputFolder);
 
         public void ApplySettings(AppSettings settings)
         {
+            OutputFolder = settings.IsFirstRun ? string.Empty : settings.OutputFolder;
             SoundCloudToken = settings.SoundCloudToken;
             Mp3Only = settings.PreferredFormat == AudioFormat.MP3;
         }
 
         public void UpdateSettings(AppSettings settings)
         {
+            settings.OutputFolder = OutputFolder;
             settings.SoundCloudToken = SoundCloudToken;
             settings.PreferredFormat = Mp3Only ? AudioFormat.MP3 : AudioFormat.WAV;
         }

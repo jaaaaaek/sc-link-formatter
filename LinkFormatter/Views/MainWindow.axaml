@@ -35,13 +35,26 @@
         </Grid>
       </Border>
 
-      <Grid Grid.Column="1" Margin="16" RowDefinitions="Auto,2*,3*">
+      <Grid Grid.Column="1" Margin="16" RowDefinitions="Auto,*">
         <views:UrlInputView Grid.Row="0" Margin="0,0,0,12" DataContext="{Binding UrlInput}" />
-        <views:DownloadQueueView Grid.Row="1" Margin="0,0,0,12" DataContext="{Binding DownloadQueue}" />
-        <views:ProgressConsoleView Grid.Row="2" DataContext="{Binding ProgressConsole}" />
+
+        <Grid Grid.Row="1"
+              IsVisible="{Binding !UrlInput.ShowErrorDetails}">
+          <Grid IsVisible="{Binding !ProgressConsole.IsExpanded}"
+                RowDefinitions="2*,3*">
+            <views:DownloadQueueView Grid.Row="0"
+                                     Margin="0,0,0,12"
+                                     DataContext="{Binding DownloadQueue}" />
+            <views:ProgressConsoleView Grid.Row="1"
+                                       DataContext="{Binding ProgressConsole}" />
+          </Grid>
+
+          <views:ProgressConsoleView IsVisible="{Binding ProgressConsole.IsExpanded}"
+                                     DataContext="{Binding ProgressConsole}" />
+        </Grid>
       </Grid>
 
-    <Border Background="#AA000000"
+    <Border Grid.ColumnSpan="2" Background="#AA000000"
             IsVisible="{Binding IsWelcomeVisible}">
       <Grid HorizontalAlignment="Center"
             VerticalAlignment="Center">

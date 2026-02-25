@@ -26,7 +26,7 @@ namespace LinkFormatter.ViewModels
         public RelayCommand AddUrlCommand { get; }
         public RelayCommand ToggleErrorDetailsCommand { get; }
         public IReadOnlyList<AudioFormat> Formats { get; } = Enum.GetValues<AudioFormat>();
-        public ObservableCollection<string> ErrorDetails { get; } = new();
+        public ObservableCollection<AddUrlDetail> Details { get; } = new();
 
         public string UrlText
         {
@@ -58,13 +58,13 @@ namespace LinkFormatter.ViewModels
             set => SetProperty(ref _showErrorDetails, value);
         }
 
-        public bool HasMultipleErrors => ErrorDetails.Count > 0;
+        public bool HasMultipleErrors => Details.Count > 0;
 
         public void ClearValidation()
         {
             HasError = false;
             ValidationMessage = string.Empty;
-            ErrorDetails.Clear();
+            Details.Clear();
             ShowErrorDetails = false;
             OnPropertyChanged(nameof(HasMultipleErrors));
         }
@@ -77,12 +77,13 @@ namespace LinkFormatter.ViewModels
         private void AddUrl()
         {
             var existingUrls = _existingUrlsProvider?.Invoke() ?? Array.Empty<string>();
-            var added = new List<DownloadItem>();
-            var errors = new List<string>();
-            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            List<DownloadItem> added = [];
+            List<AddUrlDetail> orderedDetails = [];
+            int skippedCount = 0;
+            HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
 
             var lines = UrlText
-                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                .Split(["\r\n", "\n"], StringSplitOptions.RemoveEmptyEntries)
                 .Select(line => line.Trim())
                 .Where(line => !string.IsNullOrWhiteSpace(line));
 
@@ -90,35 +91,43 @@ namespace LinkFormatter.ViewModels
             {
                 if (!seen.Add(line))
                 {
-                    errors.Add($"Duplicate in list: {line}");
+                    skippedCount++;
+                    orderedDetails.Add(new AddUrlDetail($"Skipped: Duplicate in list: {line}", isError: true));
                     continue;
                 }
 
                 var result = _validator.Validate(line, existingUrls);
                 if (!result.IsValid)
                 {
-                    errors.Add($"{line} ({result.Message})");
+                    skippedCount++;
+                    orderedDetails.Add(new AddUrlDetail($"Skipped: {line} ({result.Message})", isError: true));
                     continue;
                 }
 
-                added.Add(new DownloadItem
+                var item = new DownloadItem
                 {
                     Url = line,
                     Format = SelectedFormat,
                     Status = DownloadStatus.Pending
-                });
+                };
+
+                added.Add(item);
+                orderedDetails.Add(new AddUrlDetail($"Added: {item.Url}", isError: false));
             }
 
-            ErrorDetails.Clear();
+            Details.Clear();
             ShowErrorDetails = false;
 
             if (added.Count == 0)
             {
                 HasError = true;
-                ValidationMessage = errors.Count > 0
-                    ? $"Skipped {errors.Count}. No valid URLs found."
+                ValidationMessage = skippedCount > 0
+                    ? $"Skipped {skippedCount}. No valid URLs found."
                     : "No valid URLs found.";
-                foreach (var e in errors) ErrorDetails.Add(e);
+                foreach (var detail in orderedDetails)
+                {
+                    Details.Add(detail);
+                }
                 OnPropertyChanged(nameof(HasMultipleErrors));
                 return;
             }
@@ -130,11 +139,14 @@ namespace LinkFormatter.ViewModels
 
             UrlText = string.Empty;
 
-            if (errors.Count > 0)
+            if (skippedCount > 0)
             {
                 HasError = true;
-                ValidationMessage = $"Added {added.Count}. Skipped {errors.Count}.";
-                foreach (var e in errors) ErrorDetails.Add(e);
+                ValidationMessage = $"Added {added.Count}. Skipped {skippedCount}.";
+                foreach (var detail in orderedDetails)
+                {
+                    Details.Add(detail);
+                }
             }
             else
             {
@@ -142,6 +154,12 @@ namespace LinkFormatter.ViewModels
                 ValidationMessage = string.Empty;
             }
             OnPropertyChanged(nameof(HasMultipleErrors));
+        }
+
+        public sealed class AddUrlDetail(string message, bool isError)
+        {
+            public string Message { get; } = message;
+            public bool IsError { get; } = isError;
         }
     }
 }

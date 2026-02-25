@@ -9,7 +9,7 @@ namespace LinkFormatter.ViewModels
         private readonly IDownloadService _downloadService;
         private readonly IFileService _fileService;
         private readonly string _musicFolder;
-        private AppSettings _settings = new AppSettings();
+        private AppSettings _settings = new();
         private bool _isWelcomeVisible;
         private bool _isProcessingQueue;
         private CancellationTokenSource? _queueCts;
@@ -20,15 +20,15 @@ namespace LinkFormatter.ViewModels
         private const double BaseFontSize = 13;
         private bool _syncingZoomPreset;
         private ZoomPreset? _selectedZoomPreset;
-        private readonly IReadOnlyList<ZoomPreset> _zoomPresets = new[]
-        {
+        private readonly ZoomPreset[] _zoomPresets =
+        [
             new ZoomPreset(0.75, "75%"),
             new ZoomPreset(0.85, "85%"),
             new ZoomPreset(1.00, "100%"),
             new ZoomPreset(1.10, "110%"),
             new ZoomPreset(1.25, "125%"),
             new ZoomPreset(1.50, "150%")
-        };
+        ];
 
         public MainWindowViewModel(
             ISettingsService settingsService,
@@ -110,8 +110,8 @@ namespace LinkFormatter.ViewModels
             }
         }
 
-        public double MinimumZoom => MinZoom;
-        public double MaximumZoom => MaxZoom;
+        public static double MinimumZoom => MinZoom;
+        public static double MaximumZoom => MaxZoom;
         public double ZoomedFontSize => BaseFontSize * ZoomLevel;
         public string ZoomPercentDisplay => $"{Math.Round(ZoomLevel * 100)}%";
 
@@ -131,7 +131,7 @@ namespace LinkFormatter.ViewModels
 
             UrlInput.SelectedFormat = _settings.PreferredFormat;
             UrlInput.SetExistingUrlsProvider(() =>
-                DownloadQueue.Items.Select(i => i.Url).ToList());
+                [.. DownloadQueue.Items.Select(i => i.Url)]);
             FilesList.OutputFolder = _settings.OutputFolder;
             FilesList.SetDownloadedFilesProvider(() => _settings.DownloadedFiles);
             Welcome.ApplySettings(_settings);
@@ -170,7 +170,7 @@ namespace LinkFormatter.ViewModels
         {
             foreach (var item in DownloadQueue.Items)
             {
-                if (item.Status == DownloadStatus.Cancelled)
+                if (item.Status is DownloadStatus.Cancelled or DownloadStatus.Failed)
                 {
                     item.Status = DownloadStatus.Pending;
                 }
@@ -181,6 +181,12 @@ namespace LinkFormatter.ViewModels
             StopAllCommand.RaiseCanExecuteChanged();
 
             _queueCts = new CancellationTokenSource();
+
+            if (string.IsNullOrWhiteSpace(_settings.SoundCloudToken) &&
+                DownloadQueue.Items.Any(i => i.Status == DownloadStatus.Pending && i.Format == AudioFormat.WAV))
+            {
+                ProgressConsole.AppendLine("SoundCloud token is required for WAV downloads. Set it in Settings.");
+            }
 
             try
             {
@@ -247,7 +253,11 @@ namespace LinkFormatter.ViewModels
                 {
                     await _settingsService.SaveAsync(_settings, cancellationToken);
                 }
-                FilesList.AddFile(result.OutputFileName);
+
+                if (!string.IsNullOrWhiteSpace(result.OutputFileName))
+                {
+                    FilesList.AddFile(result.OutputFileName);
+                }
             }
             else if (cancellationToken.IsCancellationRequested)
             {
@@ -328,13 +338,13 @@ namespace LinkFormatter.ViewModels
 
         private void AdjustZoom(int direction)
         {
-            if (_zoomPresets.Count == 0)
+            if (_zoomPresets.Length == 0)
             {
                 return;
             }
 
             int currentIndex = GetClosestZoomPresetIndex();
-            int nextIndex = Math.Clamp(currentIndex + direction, 0, _zoomPresets.Count - 1);
+            int nextIndex = Math.Clamp(currentIndex + direction, 0, _zoomPresets.Length - 1);
             ZoomLevel = _zoomPresets[nextIndex].Value;
         }
 
@@ -343,7 +353,7 @@ namespace LinkFormatter.ViewModels
             double minDelta = double.MaxValue;
             int closestIndex = 0;
 
-            for (int i = 0; i < _zoomPresets.Count; i++)
+            for (int i = 0; i < _zoomPresets.Length; i++)
             {
                 double delta = Math.Abs(_zoomPresets[i].Value - ZoomLevel);
                 if (delta < minDelta)
@@ -368,16 +378,10 @@ namespace LinkFormatter.ViewModels
             _syncingZoomPreset = false;
         }
 
-        public sealed class ZoomPreset
+        public sealed class ZoomPreset(double value, string label)
         {
-            public ZoomPreset(double value, string label)
-            {
-                Value = value;
-                Label = label;
-            }
-
-            public double Value { get; }
-            public string Label { get; }
+            public double Value { get; } = value;
+            public string Label { get; } = label;
 
             public override string ToString() => Label;
         }

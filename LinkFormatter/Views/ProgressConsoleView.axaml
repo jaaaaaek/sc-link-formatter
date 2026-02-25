@@ -4,7 +4,7 @@
   <Border Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="12">
     <StackPanel Spacing="8">
       <WrapPanel>
-        <TextBlock Text="Progress Console"
+        <TextBlock Text="Console Output"
                    FontSize="16"
                    FontWeight="SemiBold"
                    Foreground="{StaticResource TextBrush}"
