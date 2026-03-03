@@ -4,7 +4,7 @@ param(
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $musicFolder = Join-Path $repoRoot "Music"
-$settingsPath = Join-Path $AppDataPath "SoundCloudDownloader\\appsettings.json"
+$settingsPath = Join-Path $AppDataPath "MooooosicMoooooocher\\appsettings.json"
 $ffmpegPath = Join-Path $musicFolder "ffmpeg.exe"
 
 Write-Host "Resetting first-run state..." -ForegroundColor Cyan

@@ -20,7 +20,7 @@ namespace MooooosicMoooooocher.Services
             string appDataPath = baseAppDataPath ??
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
-            string settingsFolder = Path.Combine(appDataPath, "SoundCloudDownloader");
+            string settingsFolder = Path.Combine(appDataPath, "MooooosicMoooooocher");
             _settingsPath = Path.Combine(settingsFolder, "appsettings.json");
         }
 

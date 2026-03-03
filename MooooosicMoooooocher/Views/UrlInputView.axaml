@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <Border Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="12">
     <StackPanel Spacing="8">
-      <TextBlock Text="Add SoundCloud URLs"
+      <TextBlock Text="Add URLs"
                  FontSize="16"
                  FontWeight="SemiBold"
                  Foreground="{StaticResource TextBrush}" />
@@ -14,7 +14,7 @@
                     VerticalScrollBarVisibility="Auto"
                     AllowAutoHide="False">
         <TextBox Text="{Binding UrlText}"
-                 Watermark="https://soundcloud.com/artist/track"
+                 Watermark="Paste URLs here"
                  Background="{StaticResource BackgroundBrush}"
                  AcceptsReturn="True"
                  TextWrapping="Wrap" />

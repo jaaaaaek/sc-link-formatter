@@ -30,8 +30,8 @@
       </StackPanel>
 
       <StackPanel Spacing="6">
-        <TextBlock Text="SoundCloud Token (optional)" Foreground="{StaticResource TextBrush}" />
-        <TextBox Text="{Binding SoundCloudToken}"
+        <TextBlock Text="Auth Token (optional)" Foreground="{StaticResource TextBrush}" />
+        <TextBox Text="{Binding AuthToken}"
                  Watermark="Only required for WAV"
                  Background="{StaticResource BackgroundBrush}" />
       </StackPanel>

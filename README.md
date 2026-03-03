@@ -1,36 +1,34 @@
-<h1>Hello!</h1>
+# MooooosicMoooooocher
 
-Disclaimer! You need a SoundCloud Go+ membership for this to work, due to the need to authenticate with them when pulling songs from their api :(
+A desktop app for downloading music. Paste URLs, pick a format, and hit download.
 
-This tool takes links to soundcloud songs like:
+## Features
 
-https://soundcloud.com/rick-astley-official/never-gonna-give-you-up-4
-https://soundcloud.com/warnerrecords/heart-of-glass1
+- Download audio as **MP3** or **WAV**
+- Batch download from a queue of URLs
+- Skips previously downloaded tracks
+- Auto-downloads **yt-dlp** and **FFmpeg** on first run
+- Cross-platform (Windows & macOS)
 
-And formats them like this! So they can be downloaded via yt-dlp. A "A feature-rich command-line audio/video downloader" https://github.com/yt-dlp/yt-dlp
+## Getting Started
 
-yt-dlp -f ba --extract-audio --audio-format wav https://soundcloud.com/rick-astley-official/never-gonna-give-you-up-4 --add-header "Authorization: OAuth <yourauthtokenhere>" --extractor-retries 10 --retry-sleep extractor:300
+1. Download the latest release for your platform
+2. Run the app — it will download yt-dlp and FFmpeg automatically on first launch
+3. Set your output folder
+4. Paste URLs, add them to the queue, and start downloading
 
-yt-dlp -f ba --extract-audio --audio-format wav https://soundcloud.com/warnerrecords/heart-of-glass1 --add-header "Authorization: OAuth <yourauthtokenhere>" --extractor-retries 10 --retry-sleep extractor:300
+WAV downloads require an auth token, which can be set in Settings.
 
-<h3>The only thing you need for this is an authorization token from soundcloud. </h3>
-Which is a bit! Tricky to get. (Not really)
+## Building from Source
 
-Just go to SoundCloud.com, use Inspect Element to navigate to the network tab as shown below, and paste the following into the filter:
-me?client_id=
+Requires [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
-Now refresh the page and you should see something like this:
-<img width="846" height="421" alt="authtokenguide" src="https://github.com/user-attachments/assets/cc4804da-0b10-418a-947d-c3e9cce49b90" />
+```bash
+dotnet build MooooosicMoooooocher/MooooosicMoooooocher.csproj
+```
 
-Now use that token as the value for the SoundCloudToken parameter when running this program. 
+To publish a self-contained release:
 
-Place all links you want to download in the NewDownloads.txt folder
-And then if you want, put those links in the ExistingDownloads folder as well to mark them as downloaded so they aren't pulled again in future runs of this.
-
-<h1>Now that that's done and you have formatted links</h1>
-Navigate to the "Music" folder within this project on the command line, and then paste those links. The yt-dlp.exe is already in there so it should look something like this 
-
-<img width="846" height="421" alt="image" src="https://github.com/user-attachments/assets/a2055ff1-68fb-4bd2-aa89-1019649ea882" />
-
-Congrats! You should now see the downloaded song in the "Music" directory. 
-<h1>Good luck!</h1>
+```bash
+dotnet publish MooooosicMoooooocher/MooooosicMoooooocher.csproj -r win-x64 -c Release
+```

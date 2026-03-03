@@ -6,7 +6,7 @@ namespace MooooosicMoooooocher.ViewModels
     {
         private bool _suppressChanges;
         private string _outputFolder = string.Empty;
-        private string _soundCloudToken = string.Empty;
+        private string _authToken = string.Empty;
         private AudioFormat _preferredFormat = AudioFormat.MP3;
 
         public event Action? SettingsChanged;
@@ -24,12 +24,12 @@ namespace MooooosicMoooooocher.ViewModels
             }
         }
 
-        public string SoundCloudToken
+        public string AuthToken
         {
-            get => _soundCloudToken;
+            get => _authToken;
             set
             {
-                if (SetProperty(ref _soundCloudToken, value) && !_suppressChanges)
+                if (SetProperty(ref _authToken, value) && !_suppressChanges)
                 {
                     SettingsChanged?.Invoke();
                 }
@@ -53,7 +53,7 @@ namespace MooooosicMoooooocher.ViewModels
             _suppressChanges = true;
 
             OutputFolder = settings.OutputFolder;
-            SoundCloudToken = settings.SoundCloudToken;
+            AuthToken = settings.AuthToken;
             PreferredFormat = settings.PreferredFormat;
 
             _suppressChanges = false;
@@ -62,7 +62,7 @@ namespace MooooosicMoooooocher.ViewModels
         public void UpdateSettings(AppSettings settings)
         {
             settings.OutputFolder = OutputFolder;
-            settings.SoundCloudToken = SoundCloudToken;
+            settings.AuthToken = AuthToken;
             settings.PreferredFormat = PreferredFormat;
         }
     }

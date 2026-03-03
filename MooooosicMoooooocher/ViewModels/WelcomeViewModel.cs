@@ -8,7 +8,7 @@ namespace MooooosicMoooooocher.ViewModels
         private readonly IFFmpegService _ffmpegService;
         private readonly IYtDlpService _ytDlpService;
         private string _outputFolder = string.Empty;
-        private string _soundCloudToken = string.Empty;
+        private string _authToken = string.Empty;
         private bool _mp3Only;
         private string _statusMessage = string.Empty;
         private double _progressPercent;
@@ -53,10 +53,10 @@ namespace MooooosicMoooooocher.ViewModels
             }
         }
 
-        public string SoundCloudToken
+        public string AuthToken
         {
-            get => _soundCloudToken;
-            set => SetProperty(ref _soundCloudToken, value);
+            get => _authToken;
+            set => SetProperty(ref _authToken, value);
         }
 
         public bool Mp3Only
@@ -121,14 +121,14 @@ namespace MooooosicMoooooocher.ViewModels
         public void ApplySettings(AppSettings settings)
         {
             OutputFolder = settings.IsFirstRun ? string.Empty : settings.OutputFolder;
-            SoundCloudToken = settings.SoundCloudToken;
+            AuthToken = settings.AuthToken;
             Mp3Only = settings.PreferredFormat == AudioFormat.MP3;
         }
 
         public void UpdateSettings(AppSettings settings)
         {
             settings.OutputFolder = OutputFolder;
-            settings.SoundCloudToken = SoundCloudToken;
+            settings.AuthToken = AuthToken;
             settings.PreferredFormat = Mp3Only ? AudioFormat.MP3 : AudioFormat.WAV;
         }
 

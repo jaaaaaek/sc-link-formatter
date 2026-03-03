@@ -41,7 +41,7 @@ namespace MooooosicMoooooocher.Services
 
             if (!uri.Host.EndsWith("soundcloud.com", StringComparison.OrdinalIgnoreCase))
             {
-                return new UrlValidationResult(false, "Only soundcloud.com URLs are supported.");
+                return new UrlValidationResult(false, "URL is not supported.");
             }
 
             var segments = uri.AbsolutePath.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
@@ -52,7 +52,7 @@ namespace MooooosicMoooooocher.Services
 
             if (ReservedPaths.Contains(segments[0]))
             {
-                return new UrlValidationResult(false, "URL is a SoundCloud system page, not a track or set.");
+                return new UrlValidationResult(false, "URL is a system page, not a track or set.");
             }
 
             if (!TrackRegex.IsMatch(url) && !SetRegex.IsMatch(url))

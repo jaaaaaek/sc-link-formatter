@@ -208,10 +208,10 @@ namespace MooooosicMoooooocher.ViewModels
 
             _queueCts = new CancellationTokenSource();
 
-            if (string.IsNullOrWhiteSpace(_settings.SoundCloudToken) &&
+            if (string.IsNullOrWhiteSpace(_settings.AuthToken) &&
                 DownloadQueue.Items.Any(i => i.Status == DownloadStatus.Pending && i.Format == AudioFormat.WAV))
             {
-                ProgressConsole.AppendLine("SoundCloud token is required for WAV downloads. Set it in Settings.");
+                ProgressConsole.AppendLine("Auth token is required for WAV downloads. Set it in Settings.");
             }
 
             try
@@ -259,7 +259,7 @@ namespace MooooosicMoooooocher.ViewModels
             var result = await _downloadService.DownloadAsync(
                 item.Model,
                 _settings.OutputFolder,
-                _settings.SoundCloudToken,
+                _settings.AuthToken,
                 progress,
                 cancellationToken);
 

@@ -66,7 +66,7 @@ namespace MooooosicMoooooocher.Services
 
             if (item.Format == AudioFormat.WAV && string.IsNullOrWhiteSpace(authToken))
             {
-                return new DownloadResult(false, "SoundCloud auth token is required for WAV downloads.", null);
+                return new DownloadResult(false, "Auth token is required for WAV downloads.", null);
             }
 
             string ytDlpPath = Path.Combine(AppContext.BaseDirectory, YtDlpService.YtDlpExecutable);
