@@ -20,13 +20,13 @@ jobs:
         include:
           - os: windows-latest
             rid: win-x64
-            artifact: ScDownloader-win-x64
+            artifact: MooooosicMoooooocher-win-x64
           - os: macos-latest
             rid: osx-x64
-            artifact: ScDownloader-osx-x64
+            artifact: MooooosicMoooooocher-osx-x64
           - os: macos-latest
             rid: osx-arm64
-            artifact: ScDownloader-osx-arm64
+            artifact: MooooosicMoooooocher-osx-arm64
 
     runs-on: ${{ matrix.os }}
 
@@ -40,7 +40,7 @@ jobs:
           dotnet-quality: 'preview'
 
       - name: Publish
-        run: dotnet publish ScDownloader/ScDownloader.csproj -r ${{ matrix.rid }} -c Release -o publish
+        run: dotnet publish MooooosicMoooooocher/MooooosicMoooooocher.csproj -r ${{ matrix.rid }} -c Release -o publish
 
       - name: Zip artifacts (Windows)
         if: runner.os == 'Windows'
@@ -80,6 +80,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: ScDownloader ${{ steps.version.outputs.tag }}
+          name: MooooosicMoooooocher ${{ steps.version.outputs.tag }}
           generate_release_notes: true
           files: artifacts/**/*.zip
