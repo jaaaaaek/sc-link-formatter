@@ -1,6 +1,6 @@
 # MooooosicMoooooocher
 
-An Avalonia desktop app for downloading lots of music! 
+An Avalonia desktop app for downloading lots of music!
 
 ## Features
 
