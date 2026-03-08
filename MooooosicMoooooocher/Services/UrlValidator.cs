@@ -19,6 +19,10 @@ namespace MooooosicMoooooocher.Services
             @"^https?://soundcloud\.com/[\w-]+/sets/[\w-]+/?(\?.*)?$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+        private static readonly Regex LikesRegex = new(
+            @"^https?://soundcloud\.com/[\w-]+/likes/?(\?.*)?$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         public UrlValidationResult Validate(string url, IReadOnlyCollection<string>? existingUrls = null)
         {
             if (string.IsNullOrWhiteSpace(url))
@@ -55,9 +59,9 @@ namespace MooooosicMoooooocher.Services
                 return new UrlValidationResult(false, "URL is a system page, not a track or set.");
             }
 
-            if (!TrackRegex.IsMatch(url) && !SetRegex.IsMatch(url))
+            if (!TrackRegex.IsMatch(url) && !SetRegex.IsMatch(url) && !LikesRegex.IsMatch(url))
             {
-                return new UrlValidationResult(false, "URL does not look like a track or set.");
+                return new UrlValidationResult(false, "URL does not look like a track, set, or likes page.");
             }
 
             if (existingUrls != null && existingUrls.Any(existing =>
@@ -67,6 +71,11 @@ namespace MooooosicMoooooocher.Services
             }
 
             return new UrlValidationResult(true, string.Empty);
+        }
+
+        public bool IsResolvableUrl(string url)
+        {
+            return !string.IsNullOrWhiteSpace(url) && LikesRegex.IsMatch(url.Trim());
         }
     }
 }

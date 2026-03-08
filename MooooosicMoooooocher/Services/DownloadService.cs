@@ -209,6 +209,99 @@ namespace MooooosicMoooooocher.Services
             }
         }
 
+        public async Task<IReadOnlyList<string>> ResolvePlaylistAsync(
+            string url,
+            string? authToken,
+            IProgress<DownloadProgress>? progress = null,
+            CancellationToken cancellationToken = default)
+        {
+            string ytDlpPath = Path.Combine(AppContext.BaseDirectory, YtDlpService.YtDlpExecutable);
+            if (!File.Exists(ytDlpPath))
+            {
+                progress?.Report(new DownloadProgress
+                {
+                    Phase = DownloadPhase.Failed,
+                    Message = $"{YtDlpService.YtDlpExecutable} was not found."
+                });
+                return [];
+            }
+
+            var args = new StringBuilder();
+            args.Append("--flat-playlist --print url ");
+            args.Append('"').Append(url).Append('"');
+
+            if (!string.IsNullOrWhiteSpace(authToken))
+            {
+                args.Append(" --add-header \"Authorization: OAuth ").Append(authToken).Append('"');
+            }
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = ytDlpPath,
+                Arguments = args.ToString(),
+                WorkingDirectory = Path.GetDirectoryName(ytDlpPath) ?? AppContext.BaseDirectory,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            progress?.Report(new DownloadProgress
+            {
+                Phase = DownloadPhase.Checking,
+                Message = $"Resolving likes from {url}..."
+            });
+
+            using var process = new Process
+            {
+                StartInfo = startInfo,
+                EnableRaisingEvents = true
+            };
+
+            var urls = new List<string>();
+            var errorBuilder = new StringBuilder();
+
+            process.OutputDataReceived += (_, e) =>
+            {
+                if (!string.IsNullOrWhiteSpace(e.Data))
+                {
+                    urls.Add(e.Data.Trim());
+                    progress?.Report(new DownloadProgress
+                    {
+                        Phase = DownloadPhase.Checking,
+                        Message = $"Found: {e.Data.Trim()}"
+                    });
+                }
+            };
+
+            process.ErrorDataReceived += (_, e) =>
+            {
+                if (!string.IsNullOrWhiteSpace(e.Data))
+                {
+                    errorBuilder.AppendLine(e.Data);
+                    progress?.Report(new DownloadProgress
+                    {
+                        Phase = DownloadPhase.Checking,
+                        Message = e.Data
+                    });
+                }
+            };
+
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            await process.WaitForExitAsync(cancellationToken);
+
+            progress?.Report(new DownloadProgress
+            {
+                Phase = DownloadPhase.Complete,
+                Message = $"Resolved {urls.Count} track(s) from likes page."
+            });
+
+            return urls;
+        }
+
         private static string BuildArguments(DownloadItem item, string outputFolder, string? authToken)
         {
             string format = item.Format == AudioFormat.MP3 ? "mp3" : "wav";

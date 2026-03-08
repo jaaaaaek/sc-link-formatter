@@ -8,6 +8,7 @@ namespace MooooosicMoooooocher.ViewModels
         private readonly ISettingsService _settingsService;
         private readonly IDownloadService _downloadService;
         private readonly IFileService _fileService;
+        private readonly IUrlValidator _urlValidator;
         private readonly string _musicFolder;
         private AppSettings _settings = new();
         private bool _isWelcomeVisible;
@@ -41,11 +42,12 @@ namespace MooooosicMoooooocher.ViewModels
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _downloadService = downloadService ?? throw new ArgumentNullException(nameof(downloadService));
             _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
+            _urlValidator = urlValidator ?? throw new ArgumentNullException(nameof(urlValidator));
 
             _musicFolder = AppContext.BaseDirectory;
 
             SettingsPanel = new SettingsPanelViewModel();
-            UrlInput = new UrlInputViewModel(urlValidator ?? throw new ArgumentNullException(nameof(urlValidator)));
+            UrlInput = new UrlInputViewModel(_urlValidator);
             DownloadQueue = new DownloadQueueViewModel();
             ProgressConsole = new ProgressConsoleViewModel();
             FilesList = new FilesListViewModel(_fileService);
@@ -176,9 +178,61 @@ namespace MooooosicMoooooocher.ViewModels
             await _settingsService.SaveAsync(_settings);
         }
 
-        private void OnUrlSubmitted(DownloadItem item)
+        private async void OnUrlSubmitted(DownloadItem item)
         {
-            DownloadQueue.Add(item);
+            if (!_urlValidator.IsResolvableUrl(item.Url))
+            {
+                DownloadQueue.Add(item);
+                return;
+            }
+
+            try
+            {
+                ProgressConsole.AppendLine($"Resolving tracks from {item.Url}...");
+
+                var progress = new Progress<DownloadProgress>(update =>
+                {
+                    if (!string.IsNullOrWhiteSpace(update.Message))
+                    {
+                        ProgressConsole.AppendLine(update.Message);
+                    }
+                });
+
+                var resolvedUrls = await _downloadService.ResolvePlaylistAsync(
+                    item.Url,
+                    _settings.AuthToken,
+                    progress);
+
+                if (resolvedUrls.Count == 0)
+                {
+                    ProgressConsole.AppendLine("No tracks found. Make sure your auth token is set if this is a private likes page.");
+                    return;
+                }
+
+                var existingUrls = DownloadQueue.Items.Select(i => i.Url).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                int added = 0;
+                foreach (var url in resolvedUrls)
+                {
+                    if (existingUrls.Contains(url))
+                        continue;
+
+                    existingUrls.Add(url);
+                    DownloadQueue.Add(new DownloadItem
+                    {
+                        Url = url,
+                        Format = item.Format,
+                        Status = DownloadStatus.Pending
+                    });
+                    added++;
+                }
+
+                ProgressConsole.AppendLine($"Added {added} track(s) to queue ({resolvedUrls.Count - added} duplicates skipped).");
+            }
+            catch (Exception ex)
+            {
+                ProgressConsole.AppendLine($"Failed to resolve likes: {ex.Message}");
+            }
         }
 
         private void OnUrlInputFormatChanged(AudioFormat format)
